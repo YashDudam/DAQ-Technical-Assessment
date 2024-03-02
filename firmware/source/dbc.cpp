@@ -67,6 +67,87 @@ void dbc::format::print() {
   }
 }
 
+dbc::format::format(std::string dbc_filename) {
+  auto dbc_file = std::ifstream(dbc_filename);
+  if (!dbc_file.is_open()) {
+    std::cerr << "Unable to open file: " << dbc_filename << '\n';
+    exit(1);
+  }
+
+  std::string line;
+  while (std::getline(dbc_file, line)) {
+    if (line.substr(0, 3) == "BO_")
+      break;
+  }
+
+  auto stream = std::istringstream(line);
+  std::string _, can_id, name, num_bytes;
+  stream >> _ >> can_id >> name >> num_bytes;
+  this->can_id = std::stoi(can_id);
+  this->name = name.substr(0, name.length() - 1);
+  this->num_bytes = std::stoi(num_bytes);
+
+  while (std::getline(dbc_file, line)) {
+    if (line.empty())
+      break;
+    auto signal_details = trim_leading_whitespace(line);
+
+    std::string _, signal_name;
+    std::istringstream(line) >> _ >> signal_name;
+    auto pair = std::pair(signal_name, new dbc::signal(signal_details));
+    this->signals.insert(pair);
+    delete pair.second;
+  }
+}
+
+const int dbc::format::get_can_id() { return this->can_id; }
+
+const std::string dbc::format::get_frame_name() { return this->name; }
+
+const std::vector<std::string> dbc::format::get_signal_names() {
+  auto names = std::vector<std::string>();
+  for (auto &signal : this->signals) {
+    names.push_back(signal.first);
+  }
+  return names;
+}
+
+const int dbc::format::start_bit(std::string signal_name) {
+  return this->signals.at(signal_name)->start_bit;
+}
+
+const int dbc::format::bit_length(std::string signal_name) {
+  return this->signals.at(signal_name)->length;
+}
+
+const bool dbc::format::is_big_endian(std::string signal_name) {
+  return this->signals.at(signal_name)->big_endian;
+}
+
+const bool dbc::format::is_signed(std::string signal_name) {
+  return this->signals.at(signal_name)->sign;
+}
+
+const double dbc::format::scale(std::string signal_name) {
+  return this->signals.at(signal_name)->scale;
+}
+
+const int dbc::format::offset(std::string signal_name) {
+  return this->signals.at(signal_name)->offset;
+}
+
+const int dbc::format::min(std::string signal_name) {
+  return this->signals.at(signal_name)->min;
+}
+
+const int dbc::format::max(std::string signal_name) {
+  return this->signals.at(signal_name)->max;
+}
+
+const std::string dbc::format::unit(std::string signal_name) {
+  return this->signals.at(signal_name)->unit;
+}
+
 static std::string trim_leading_whitespace(const std::string line) {
   return line.substr(line.find_first_not_of(' '));
 }
@@ -194,84 +275,4 @@ static const std::string extract_unit(const std::string details) {
   std::getline(unit_stream, unit, '"');
 
   return unit;
-}
-
-dbc::format::format(std::string dbc_filename) {
-  auto dbc_file = std::ifstream(dbc_filename);
-  if (!dbc_file.is_open()) {
-    std::cerr << "Unable to open file: " << dbc_filename << '\n';
-    exit(1);
-  }
-
-  std::string line;
-  while (std::getline(dbc_file, line)) {
-    if (line.substr(0, 3) == "BO_")
-      break;
-  }
-
-  auto stream = std::istringstream(line);
-  std::string _, can_id, name, num_bytes;
-  stream >> _ >> can_id >> name >> num_bytes;
-  this->can_id = std::stoi(can_id);
-  this->name = name.substr(0, name.length() - 1);
-  this->num_bytes = std::stoi(num_bytes);
-
-  while (std::getline(dbc_file, line)) {
-    if (line.empty())
-      break;
-    auto signal_details = trim_leading_whitespace(line);
-
-    std::string _, signal_name;
-    std::istringstream(line) >> _ >> name;
-    auto pair = std::pair(name, new dbc::signal(signal_details));
-    this->signals.insert(pair);
-  }
-}
-
-const int dbc::format::get_can_id() { return this->can_id; }
-
-const std::string dbc::format::get_frame_name() { return this->name; }
-
-const std::vector<std::string> dbc::format::get_signal_names() {
-  auto names = std::vector<std::string>();
-  for (auto signal : this->signals) {
-    names.push_back(signal.first);
-  }
-  return names;
-}
-
-const int dbc::format::start_bit(std::string signal_name) {
-  return this->signals.at(signal_name)->start_bit;
-}
-
-const int dbc::format::bit_length(std::string signal_name) {
-  return this->signals.at(signal_name)->length;
-}
-
-const bool dbc::format::is_big_endian(std::string signal_name) {
-  return this->signals.at(signal_name)->big_endian;
-}
-
-const bool dbc::format::is_signed(std::string signal_name) {
-  return this->signals.at(signal_name)->sign;
-}
-
-const double dbc::format::scale(std::string signal_name) {
-  return this->signals.at(signal_name)->scale;
-}
-
-const int dbc::format::offset(std::string signal_name) {
-  return this->signals.at(signal_name)->offset;
-}
-
-const int dbc::format::min(std::string signal_name) {
-  return this->signals.at(signal_name)->min;
-}
-
-const int dbc::format::max(std::string signal_name) {
-  return this->signals.at(signal_name)->max;
-}
-
-const std::string dbc::format::unit(std::string signal_name) {
-  return this->signals.at(signal_name)->unit;
 }

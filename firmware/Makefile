@@ -2,7 +2,7 @@ CXX = clang++
 CXXFLAGS = $(CXXFLAGS1)
 
 CXXFLAGS0 = -Wall -Werror -std=c++20
-CXXFLAGS1 = -Wall -Werror -std=c++20 -fsanitize=address,leak,undefined
+CXXFLAGS1 = -Wall -Werror -std=c++20 -g -fsanitize=address,leak,undefined
 
 SRC = source
 BIN = build/bin
@@ -18,7 +18,7 @@ firmware: $(OBJ)/main.o $(OBJ)/dbc.o
 $(OBJ)/main.o: $(SRC)/main.cpp build
 	$(CXX) -o $(OBJ)/main.o -c $(SRC)/main.cpp -I $(INCLUDE)
 
-$(OBJ)/dbc.o: $(SRC)/dbc.cpp build
+$(OBJ)/dbc.o: $(SRC)/dbc.cpp build $(INCLUDE)/dbc.h
 	$(CXX) -o $(OBJ)/dbc.o -c $(SRC)/dbc.cpp -I $(INCLUDE)
 
 build:

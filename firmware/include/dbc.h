@@ -7,7 +7,6 @@
 
 namespace dbc {
 typedef struct signal *Signal;
-// struct signal;
 
 class format {
 private:
@@ -15,7 +14,6 @@ private:
   std::string name;
   int num_bytes;
   std::unordered_map<std::string, Signal> signals;
-  // std::unordered_map<std::string, std::unique_ptr<dbc::signal>> signals;
 
 public:
   void print();

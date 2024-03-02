@@ -51,7 +51,10 @@ static void print(dbc::format dbc, std::string signal_name) {
             << "Unit: " << dbc.unit(signal_name) << '\n';
 }
 
-static double extract_value(dbc::format dbc, uint64_t payload);
+static uint64_t extract_value(uint64_t payload, int start, int length);
+static uint64_t little_endian_to_big_endian(uint64_t little_endian);
+static double extract_value(dbc::format dbc, uint64_t payload,
+                            std::string signal_name);
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
@@ -63,11 +66,11 @@ int main(int argc, char *argv[]) {
   const auto can_filename = argv[2];
 
   auto dbc = dbc::format(dbc_filename);
-  std::cout << "=========================================\n";
-  print(dbc, "WheelSpeedFR");
-  std::cout << "=========================================\n";
-  print(dbc, "WheelSpeedFL");
-  std::cout << "=========================================\n";
+  // std::cout << "=========================================\n";
+  // print(dbc, "WheelSpeedFR");
+  // std::cout << "=========================================\n";
+  // print(dbc, "WheelSpeedFL");
+  // std::cout << "=========================================\n";
 
   auto can_file = std::ifstream(can_filename);
   if (!can_file.is_open()) {
@@ -78,14 +81,52 @@ int main(int argc, char *argv[]) {
   std::string line;
   while (std::getline(can_file, line)) {
     auto pkt = packet(line);
-    // if (pkt.can_id != dbc.get_can_id()) {
-    //   continue;
-    // }
+    if (pkt.can_id != dbc.get_can_id()) {
+      continue;
+    }
+    // std::cout << pkt.payload << std::endl;
 
-    extract_value(dbc, pkt.payload);
+    std::cout << pkt.timestamp << ": "
+              << "WheelSpeedFR: "
+              << extract_value(dbc, pkt.payload, "WheelSpeedFR") << '\n';
+    std::cout << pkt.timestamp << ": "
+              << "WheelSpeedRR: "
+              << extract_value(dbc, pkt.payload, "WheelSpeedRR") << '\n';
   }
 
   return 0;
 }
 
-static double extract_value(dbc::format dbc, uint64_t payload) { return 0.0; }
+static double extract_value(dbc::format dbc, uint64_t payload,
+                            std::string signal_name) {
+  if (!dbc.is_big_endian(signal_name)) {
+    payload = little_endian_to_big_endian(payload);
+  }
+
+  auto length = dbc.bit_length(signal_name);
+  auto start = dbc.start_bit(signal_name);
+
+  uint64_t mask = ((1 << length) - 1);
+  mask = mask << start;
+  uint64_t result = 0;
+  result = payload & mask;
+  result = result >> start;
+
+  return result * dbc.scale(signal_name) + dbc.offset(signal_name);
+}
+
+static uint64_t little_endian_to_big_endian(uint64_t little_endian) {
+  uint64_t big_endian = 0;
+
+  // Iterate through each byte of the little endian number
+  for (int i = 0; i < 8; ++i) {
+    // Extract the i-th byte from the little endian number
+    uint8_t byte = (little_endian >> (i * 8)) & 0xFF;
+
+    // Append the byte to the big endian number in reverse order
+    big_endian |= static_cast<uint64_t>(byte)
+                  << ((sizeof(uint64_t) - 1 - i) * 8);
+  }
+
+  return big_endian;
+}
