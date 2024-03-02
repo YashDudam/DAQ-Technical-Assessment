@@ -12,13 +12,6 @@ struct packet {
   uint64_t payload;
 
   packet(std::string line);
-  // For debug sake, please remove it yash
-  void print() {
-    std::cout << "Timestamp: " << timestamp << '\n'
-              << "Interface: " << interface << '\n'
-              << "can_id: " << can_id << '\n'
-              << "payload: " << payload << '\n';
-  }
 };
 
 packet::packet(std::string line) {
@@ -38,20 +31,6 @@ packet::packet(std::string line) {
   this->payload = std::strtoull(field.c_str(), nullptr, 16);
 }
 
-static void print(dbc::format dbc, std::string signal_name) {
-  std::cout << "Name: " << signal_name << '\n'
-            << "Start bit: " << dbc.start_bit(signal_name) << '\n'
-            << "Length: " << dbc.bit_length(signal_name) << '\n'
-            << "Big Endian: " << dbc.is_big_endian(signal_name) << '\n'
-            << "Signed: " << dbc.is_signed(signal_name) << '\n'
-            << "Scale: " << dbc.scale(signal_name) << '\n'
-            << "Offset: " << dbc.offset(signal_name) << '\n'
-            << "Min: " << dbc.min(signal_name) << '\n'
-            << "Max: " << dbc.max(signal_name) << '\n'
-            << "Unit: " << dbc.unit(signal_name) << '\n';
-}
-
-static uint64_t extract_value(uint64_t payload, int start, int length);
 static uint64_t little_endian_to_big_endian(uint64_t little_endian);
 static double extract_value(dbc::format dbc, uint64_t payload,
                             std::string signal_name);
@@ -66,15 +45,16 @@ int main(int argc, char *argv[]) {
   const auto can_filename = argv[2];
 
   auto dbc = dbc::format(dbc_filename);
-  // std::cout << "=========================================\n";
-  // print(dbc, "WheelSpeedFR");
-  // std::cout << "=========================================\n";
-  // print(dbc, "WheelSpeedFL");
-  // std::cout << "=========================================\n";
 
   auto can_file = std::ifstream(can_filename);
   if (!can_file.is_open()) {
     std::cerr << "Couldn't open file: " << can_filename << '\n';
+    return 1;
+  }
+
+  auto output = std::ofstream("output.txt");
+  if (!output.is_open()) {
+    std::cerr << "Couldn't open output.txt\n";
     return 1;
   }
 
@@ -84,14 +64,13 @@ int main(int argc, char *argv[]) {
     if (pkt.can_id != dbc.get_can_id()) {
       continue;
     }
-    // std::cout << pkt.payload << std::endl;
 
-    std::cout << pkt.timestamp << ": "
-              << "WheelSpeedFR: "
-              << extract_value(dbc, pkt.payload, "WheelSpeedFR") << '\n';
-    std::cout << pkt.timestamp << ": "
-              << "WheelSpeedRR: "
-              << extract_value(dbc, pkt.payload, "WheelSpeedRR") << '\n';
+    output << pkt.timestamp << ": WheelSpeedFR: " << std::fixed
+           << std::setprecision(1)
+           << extract_value(dbc, pkt.payload, "WheelSpeedFR") << '\n';
+    output << pkt.timestamp << ": WheelSpeedRR: " << std::fixed
+           << std::setprecision(1)
+           << extract_value(dbc, pkt.payload, "WheelSpeedRR") << '\n';
   }
 
   return 0;

@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -42,31 +43,6 @@ dbc::signal::signal(const std::string details)
       offset(extract_offset(details)), min(extract_min(details)),
       max(extract_max(details)), unit(extract_unit(details)) {}
 
-void dbc::signal::print() {
-  std::cout << "Name: " << this->name << '\n'
-            << "Start bit: " << this->start_bit << '\n'
-            << "Length: " << this->length << '\n'
-            << "Big Endian: " << this->big_endian << '\n'
-            << "Signed: " << this->sign << '\n'
-            << "Scale: " << this->scale << '\n'
-            << "Offset: " << this->offset << '\n'
-            << "Min: " << this->min << '\n'
-            << "Max: " << this->max << '\n'
-            << "Unit: " << this->unit << '\n';
-}
-
-void dbc::format::print() {
-  std::cout << "CAN id: " << this->can_id << '\n'
-            << "name: " << this->name << '\n'
-            << "Bytes: " << this->num_bytes << '\n';
-
-  std::cout << "=========================================\n";
-  for (auto &pair : this->signals) {
-    pair.second->print();
-    std::cout << "=========================================\n";
-  }
-}
-
 dbc::format::format(std::string dbc_filename) {
   auto dbc_file = std::ifstream(dbc_filename);
   if (!dbc_file.is_open()) {
@@ -99,6 +75,12 @@ dbc::format::format(std::string dbc_filename) {
     delete pair.second;
   }
 }
+
+// dbc::format::~format() {
+// for (auto &signal : signals) {
+// signal.second.reset();
+// }
+// }
 
 const int dbc::format::get_can_id() { return this->can_id; }
 
