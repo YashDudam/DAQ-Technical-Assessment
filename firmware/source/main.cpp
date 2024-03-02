@@ -61,10 +61,11 @@ int main(int argc, char *argv[]) {
   std::string line;
   while (std::getline(can_file, line)) {
     auto pkt = packet(line);
-    if (pkt.can_id != dbc.get_can_id())
-      continue;
+    // if (pkt.can_id != dbc.get_can_id()) {
+    //   continue;
+    // }
 
-    double value = extract_value(dbc, pkt.payload);
+    extract_value(dbc, pkt.payload);
   }
 
   return 0;

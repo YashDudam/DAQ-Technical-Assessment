@@ -3,6 +3,17 @@
 
 #include "dbc.h"
 
+static const std::string extract_name(const std::string details);
+static const int extract_start_bit(const std::string details);
+static const int extract_length(const std::string details);
+static const bool extract_big_endian(const std::string details);
+static const bool extract_sign(const std::string details);
+static const double extract_scale(const std::string details);
+static const int extract_offset(const std::string details);
+static const int extract_min(const std::string details);
+static const int extract_max(const std::string details);
+static const std::string extract_unit(const std::string details);
+
 struct dbc::signal {
   const std::string name;
   const int start_bit;
@@ -19,17 +30,6 @@ struct dbc::signal {
   // remove after debugging yash.
   void print();
 };
-
-static const std::string extract_name(const std::string details);
-static const int extract_start_bit(const std::string details);
-static const int extract_length(const std::string details);
-static const bool extract_big_endian(const std::string details);
-static const bool extract_sign(const std::string details);
-static const double extract_scale(const std::string details);
-static const int extract_offset(const std::string details);
-static const int extract_min(const std::string details);
-static const int extract_max(const std::string details);
-static const std::string extract_unit(const std::string details);
 
 dbc::signal::signal(const std::string details)
     : name(extract_name(details)), start_bit(extract_start_bit(details)),

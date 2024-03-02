@@ -1,0 +1,33 @@
+[
+  {
+    "arguments": [
+      "/usr/local/opt/llvm/bin/clang++",
+      "-c",
+      "-I",
+      "include",
+      "-o",
+      "build/objects/dbc.o",
+      "source/dbc.cpp"
+    ],
+    "directory": "/Users/yash/redback/assessment/firmware",
+    "file": "/Users/yash/redback/assessment/firmware/source/dbc.cpp",
+    "output": "/Users/yash/redback/assessment/firmware/build/objects/dbc.o"
+  },
+  {
+    "arguments": [
+      "/usr/local/opt/llvm/bin/clang++",
+      "-c",
+      "-Wall",
+      "-Werror",
+      "-I",
+      "include",
+      "build/objects/dbc.o",
+      "-o",
+      "build/bin/firmware",
+      "source/main.cpp"
+    ],
+    "directory": "/Users/yash/redback/assessment/firmware",
+    "file": "/Users/yash/redback/assessment/firmware/source/main.cpp",
+    "output": "/Users/yash/redback/assessment/firmware/build/bin/firmware"
+  }
+]
