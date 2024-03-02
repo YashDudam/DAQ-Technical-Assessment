@@ -38,6 +38,19 @@ packet::packet(std::string line) {
   this->payload = std::strtoull(field.c_str(), nullptr, 16);
 }
 
+static void print(dbc::format dbc, std::string signal_name) {
+  std::cout << "Name: " << signal_name << '\n'
+            << "Start bit: " << dbc.start_bit(signal_name) << '\n'
+            << "Length: " << dbc.bit_length(signal_name) << '\n'
+            << "Big Endian: " << dbc.is_big_endian(signal_name) << '\n'
+            << "Signed: " << dbc.is_signed(signal_name) << '\n'
+            << "Scale: " << dbc.scale(signal_name) << '\n'
+            << "Offset: " << dbc.offset(signal_name) << '\n'
+            << "Min: " << dbc.min(signal_name) << '\n'
+            << "Max: " << dbc.max(signal_name) << '\n'
+            << "Unit: " << dbc.unit(signal_name) << '\n';
+}
+
 static double extract_value(dbc::format dbc, uint64_t payload);
 
 int main(int argc, char *argv[]) {
@@ -50,7 +63,11 @@ int main(int argc, char *argv[]) {
   const auto can_filename = argv[2];
 
   auto dbc = dbc::format(dbc_filename);
-  dbc.print();
+  std::cout << "=========================================\n";
+  print(dbc, "WheelSpeedFR");
+  std::cout << "=========================================\n";
+  print(dbc, "WheelSpeedFL");
+  std::cout << "=========================================\n";
 
   auto can_file = std::ifstream(can_filename);
   if (!can_file.is_open()) {

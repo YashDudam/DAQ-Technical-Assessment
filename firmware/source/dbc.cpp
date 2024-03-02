@@ -61,7 +61,7 @@ void dbc::format::print() {
             << "Bytes: " << this->num_bytes << '\n';
 
   std::cout << "=========================================\n";
-  for (auto pair : this->signals) {
+  for (auto &pair : this->signals) {
     pair.second->print();
     std::cout << "=========================================\n";
   }
@@ -228,28 +228,50 @@ dbc::format::format(std::string dbc_filename) {
   }
 }
 
-const int dbc::format::get_can_id() { return 0; }
+const int dbc::format::get_can_id() { return this->can_id; }
 
-const std::string dbc::format::get_frame_name() { return NULL; }
+const std::string dbc::format::get_frame_name() { return this->name; }
 
 const std::vector<std::string> dbc::format::get_signal_names() {
-  return std::vector<std::string>();
+  auto names = std::vector<std::string>();
+  for (auto signal : this->signals) {
+    names.push_back(signal.first);
+  }
+  return names;
 }
 
-const int dbc::format::start_bit(std::string signal_name) { return 0; }
+const int dbc::format::start_bit(std::string signal_name) {
+  return this->signals.at(signal_name)->start_bit;
+}
 
-const int dbc::format::bit_length(std::string signal_name) { return 0; }
+const int dbc::format::bit_length(std::string signal_name) {
+  return this->signals.at(signal_name)->length;
+}
 
-const bool dbc::format::is_big_endian(std::string signal_name) { return false; }
+const bool dbc::format::is_big_endian(std::string signal_name) {
+  return this->signals.at(signal_name)->big_endian;
+}
 
-const bool dbc::format::is_signed(std::string signal_name) { return false; }
+const bool dbc::format::is_signed(std::string signal_name) {
+  return this->signals.at(signal_name)->sign;
+}
 
-const double dbc::format::scale(std::string signal_name) { return 0.0; }
+const double dbc::format::scale(std::string signal_name) {
+  return this->signals.at(signal_name)->scale;
+}
 
-const int dbc::format::offset(std::string signal_name) { return 0; }
+const int dbc::format::offset(std::string signal_name) {
+  return this->signals.at(signal_name)->offset;
+}
 
-const int dbc::format::min(std::string signal_name) { return 0; }
+const int dbc::format::min(std::string signal_name) {
+  return this->signals.at(signal_name)->min;
+}
 
-const int dbc::format::max(std::string signal_name) { return 0; }
+const int dbc::format::max(std::string signal_name) {
+  return this->signals.at(signal_name)->max;
+}
 
-const std::string dbc::format::unit(std::string signal_name) { return NULL; }
+const std::string dbc::format::unit(std::string signal_name) {
+  return this->signals.at(signal_name)->unit;
+}
