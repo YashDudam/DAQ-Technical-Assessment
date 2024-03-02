@@ -1,8 +1,12 @@
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 #include "dbc.h"
 
+static std::string trim_leading_whitespace(const std::string line);
 static const std::string extract_name(const std::string details);
 static const int extract_start_bit(const std::string details);
 static const int extract_length(const std::string details);
@@ -51,21 +55,35 @@ void dbc::signal::print() {
             << "Unit: " << this->unit << '\n';
 }
 
+void dbc::format::print() {
+  std::cout << "CAN id: " << this->can_id << '\n'
+            << "name: " << this->name << '\n'
+            << "Bytes: " << this->num_bytes << '\n';
+
+  std::cout << "=========================================\n";
+  for (auto pair : this->signals) {
+    pair.second->print();
+    std::cout << "=========================================\n";
+  }
+}
+
+static std::string trim_leading_whitespace(const std::string line) {
+  return line.substr(line.find_first_not_of(' '));
+}
+
 static const std::string extract_name(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, name;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> name;
 
   return name;
 }
 
 static const int extract_start_bit(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, bit_details;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> bit_details;
 
   auto bit_details_stream = std::istringstream(bit_details);
@@ -76,10 +94,9 @@ static const int extract_start_bit(const std::string details) {
 }
 
 static const int extract_length(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, bit_details;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> bit_details;
 
   auto bit_details_stream = std::istringstream(bit_details);
@@ -95,30 +112,27 @@ static const int extract_length(const std::string details) {
 }
 
 static const bool extract_big_endian(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, bit_details;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> bit_details;
 
   return bit_details.at(bit_details.length() - 2) == '0';
 }
 
 static const bool extract_sign(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, bit_details;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> bit_details;
 
   return bit_details.back() == '-';
 }
 
 static const double extract_scale(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, scale_offset;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> _ >> scale_offset;
 
   scale_offset = scale_offset.substr(1, scale_offset.length() - 1);
@@ -130,10 +144,9 @@ static const double extract_scale(const std::string details) {
 }
 
 static const int extract_offset(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, scale_offset;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> _ >> scale_offset;
 
   scale_offset = scale_offset.substr(1, scale_offset.length() - 1);
@@ -146,10 +159,9 @@ static const int extract_offset(const std::string details) {
 }
 
 static const int extract_min(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, ranges;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> _ >> _ >> ranges;
 
   ranges = ranges.substr(1, ranges.length() - 1);
@@ -161,10 +173,9 @@ static const int extract_min(const std::string details) {
 }
 
 static const int extract_max(const std::string details) {
-  auto trimmed_details = details.substr(3);
   std::string _, ranges;
 
-  auto stream = std::istringstream(trimmed_details);
+  auto stream = std::istringstream(details);
   stream >> _ >> _ >> _ >> _ >> _ >> ranges;
 
   ranges = ranges.substr(1, ranges.length() - 1);
@@ -185,7 +196,37 @@ static const std::string extract_unit(const std::string details) {
   return unit;
 }
 
-dbc::format::format(std::string dbc_filename) {}
+dbc::format::format(std::string dbc_filename) {
+  auto dbc_file = std::ifstream(dbc_filename);
+  if (!dbc_file.is_open()) {
+    std::cerr << "Unable to open file: " << dbc_filename << '\n';
+    exit(1);
+  }
+
+  std::string line;
+  while (std::getline(dbc_file, line)) {
+    if (line.substr(0, 3) == "BO_")
+      break;
+  }
+
+  auto stream = std::istringstream(line);
+  std::string _, can_id, name, num_bytes;
+  stream >> _ >> can_id >> name >> num_bytes;
+  this->can_id = std::stoi(can_id);
+  this->name = name.substr(0, name.length() - 1);
+  this->num_bytes = std::stoi(num_bytes);
+
+  while (std::getline(dbc_file, line)) {
+    if (line.empty())
+      break;
+    auto signal_details = trim_leading_whitespace(line);
+
+    std::string _, signal_name;
+    std::istringstream(line) >> _ >> name;
+    auto pair = std::pair(name, new dbc::signal(signal_details));
+    this->signals.insert(pair);
+  }
+}
 
 const int dbc::format::get_can_id() { return 0; }
 

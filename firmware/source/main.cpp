@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
   const auto can_filename = argv[2];
 
   auto dbc = dbc::format(dbc_filename);
-  // dbc.print();
+  dbc.print();
 
   auto can_file = std::ifstream(can_filename);
   if (!can_file.is_open()) {

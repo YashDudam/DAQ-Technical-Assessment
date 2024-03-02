@@ -18,6 +18,7 @@ private:
   // std::unordered_map<std::string, std::unique_ptr<dbc::signal>> signals;
 
 public:
+  void print();
   format(std::string dbc_filename);
   const int get_can_id();
   const std::string get_frame_name();
