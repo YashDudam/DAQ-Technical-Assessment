@@ -23,9 +23,16 @@ I still have a lot to learn with C++ development, and I'm sure the C++ course ru
 though, I'm excited to learn more and get better.
 
 ## Telemetry
-The streaming service was crashing because there was an extraneous '}' in some of the JSON inputs.
-So I checked for this case before parsing it.
+The streaming service was crashing because of incorrect JSON strings causing an exception to be thrown by JSON.parse(). The solution
+was to simply catch it and move onto the next data packet.
 
-The second task 
+The second task was simply tracking if its been five seconds since the last temp exceeded and was simple enough to implement.
+
+The third task was just a couple cases that checked the state as the componenent rerendered.
+
+Overall, I wish I could have improved the UI and explored that a bit more but unfortunately I was quite busy this week and had to leave
+it to the last minute.
 
 ## Cloud
+I have no experience working with cloud architecture and due to some unforeseen circumstances I wasn't able to attempt this task at all :(.
+However, when I have some free time on my hands I'm excited to look into how developing cloud architecture works.
