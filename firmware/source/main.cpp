@@ -5,6 +5,7 @@
 
 #include "dbc.h"
 
+// struct to store the data from dump.log
 struct packet {
   std::string timestamp;
   std::string interface;
@@ -24,6 +25,7 @@ packet::packet(std::string line) {
   auto stream = std::istringstream(data);
   std::string field;
 
+  // get '#' delimited id and payload
   std::getline(stream, field, '#');
   this->can_id = std::strtoul(field.c_str(), nullptr, 16);
 
@@ -44,20 +46,25 @@ int main(int argc, char *argv[]) {
   const auto dbc_filename = argv[1];
   const auto can_filename = argv[2];
 
+  // parses Sensor.dbc so we can have our necessary information for bit masks
+  // and such
   auto dbc = dbc::format(dbc_filename);
 
+  // open can dump
   auto can_file = std::ifstream(can_filename);
   if (!can_file.is_open()) {
     std::cerr << "Couldn't open file: " << can_filename << '\n';
     return 1;
   }
 
+  // open output
   auto output = std::ofstream("output.txt");
   if (!output.is_open()) {
     std::cerr << "Couldn't open output.txt\n";
     return 1;
   }
 
+  // read lines from dump, filter by can_id, read required bits and print
   std::string line;
   while (std::getline(can_file, line)) {
     auto pkt = packet(line);
@@ -65,6 +72,7 @@ int main(int argc, char *argv[]) {
       continue;
     }
 
+    // print values in the correct format
     output << pkt.timestamp << ": WheelSpeedFR: " << std::fixed
            << std::setprecision(1)
            << extract_value(dbc, pkt.payload, "WheelSpeedFR") << '\n';
@@ -76,6 +84,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+// uses the dbc rules to extract a given signal's value from the payload
 static double extract_value(dbc::format dbc, uint64_t payload,
                             std::string signal_name) {
   if (!dbc.is_big_endian(signal_name)) {

@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace dbc {
+// This is C style but I much rather would have used a unique_ptr for signal
 typedef struct signal *Signal;
 
 class format {
