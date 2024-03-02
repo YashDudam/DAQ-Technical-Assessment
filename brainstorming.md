@@ -23,5 +23,7 @@ I still have a lot to learn with C++ development, and I'm sure the C++ course ru
 though, I'm excited to learn more and get better.
 
 ## Telemetry
+The streaming service was crashing because there was an extraneous '}' in some of the JSON inputs.
+So I installed ts-json-validator to validate our json string before parsing.
 
 ## Cloud

@@ -1,10 +1,22 @@
 import net from "net";
 import { WebSocket, WebSocketServer } from "ws";
+import { createSchema, TsjsonParser, Validated } from "ts-json-validator";
 
 interface VehicleData {
   battery_temperature: number;
   timestamp: number;
 }
+
+const parser = new TsjsonParser(
+  createSchema({
+    type: "object",
+    properties: {
+      battery_temperature: createSchema({ type: "number" }),
+      timestamp: createSchema({ type: "number" })
+    },
+    required: ["battery_temperature", "timestamp"]
+  }),
+);
 
 const TCP_PORT = 12000;
 const WS_PORT = 8080;
@@ -17,7 +29,9 @@ tcpServer.on("connection", (socket) => {
   socket.on("data", (msg) => {
     console.log(`Received: ${msg.toString()}`);
 
-    const jsonData: VehicleData = JSON.parse(msg.toString());
+    if (parser.validates(msg.toString())) {
+      const jsonData: VehicleData = JSON.parse(msg.toString());
+    }
 
     // Send JSON over WS to frontend clients
     websocketServer.clients.forEach(function each(client) {

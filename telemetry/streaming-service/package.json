@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "ts-json-validator": "^0.7.1",
     "ws": "^8.12.1"
   },
   "devDependencies": {
