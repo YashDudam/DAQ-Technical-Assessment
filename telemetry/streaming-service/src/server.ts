@@ -19,39 +19,41 @@ tcpServer.on("connection", (socket) => {
   socket.on("data", (msg) => {
     console.log(`Received: ${msg.toString()}`);
 
-    if (msg.toString().endsWith('}}')) return;
-
-    const jsonData: VehicleData = JSON.parse(msg.toString());
-
-    if (jsonData.battery_temperature < 20 || jsonData.battery_temperature > 80) {
-
-      const currentTimestamp = jsonData.timestamp;
-
-      // Check if it's been more than 5 seconds since the last out-of-range event
-      if (currentTimestamp - lastTempExceededTime > 5000) {
-        // Reset the count if it's been more than 5 seconds
-        tempExceededCount = 1;
-      } else {
-        // Increment the count if it's within the 5-second window
-        tempExceededCount++;
+    try {
+      const jsonData: VehicleData = JSON.parse(msg.toString());
+      if (jsonData.battery_temperature < 20 || jsonData.battery_temperature > 80) {
+  
+        const currentTimestamp = jsonData.timestamp;
+  
+        // Check if it's been more than 5 seconds since the last out-of-range event
+        if (currentTimestamp - lastTempExceededTime > 5000) {
+          // Reset the count if it's been more than 5 seconds
+          tempExceededCount = 1;
+        } else {
+          // Increment the count if it's within the 5-second window
+          tempExceededCount++;
+        }
+  
+        // Update the timestamp of the last out-of-range event
+        lastTempExceededTime = currentTimestamp;
+  
+        // Check if the temperature has exceeded the range more than 3 times in 5 seconds
+        if (tempExceededCount > 3) {
+          console.log(`Timestamp: ${currentTimestamp}, Battery temperature out of safe range`);
+        }
       }
-
-      // Update the timestamp of the last out-of-range event
-      lastTempExceededTime = currentTimestamp;
-
-      // Check if the temperature has exceeded the range more than 3 times in 5 seconds
-      if (tempExceededCount > 3) {
-        console.log(`Timestamp: ${currentTimestamp}, Battery temperature out of safe range`);
-      }
+  
+  
+      // Send JSON over WS to frontend clients
+      websocketServer.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(msg.toString());
+        }
+      });
+    } catch (error) {
+      return;
     }
 
-
-    // Send JSON over WS to frontend clients
-    websocketServer.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(msg.toString());
-      }
-    });
   });
 
   socket.on("end", () => {
